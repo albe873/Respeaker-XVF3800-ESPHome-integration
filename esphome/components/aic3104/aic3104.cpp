@@ -43,8 +43,10 @@ void AIC3104::setup() {
   ERROR_CHECK(this->write_byte(AIC3104_HPR_ROUTE, 0x08), "Set HPR_ROUTE failed");
   ERROR_CHECK(this->write_byte(AIC3104_LOL_ROUTE, 0x08), "Set LOL_ROUTE failed");
   ERROR_CHECK(this->write_byte(AIC3104_LOR_ROUTE, 0x08), "Set LOR_ROUTE failed");
-  // The onboard speaker amplifier is fed from LOP/M. Set its output level to
-  // the maximum documented analog boost (+9 dB), while preserving enable/unmute bits.
+  // Set both analog output paths to the maximum level documented by Seeed.
+  // This covers the board's headphone and JST amplifier routes.
+  ERROR_CHECK(this->write_byte(AIC3104_HPLOUT_LEVEL, 0x9B), "Set HPLOUT level failed");
+  ERROR_CHECK(this->write_byte(AIC3104_HPROUT_LEVEL, 0x9B), "Set HPROUT level failed");
   ERROR_CHECK(this->write_byte(AIC3104_LEFT_LOP_LEVEL, 0x9B), "Set LEFT_LOP level failed");
   ERROR_CHECK(this->write_byte(AIC3104_RIGHT_LOP_LEVEL, 0x9B), "Set RIGHT_LOP level failed");
   ERROR_CHECK(this->write_byte(AIC3104_HPL_GAIN, 0x3E), "Set HPL_GAIN failed");

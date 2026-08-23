@@ -130,7 +130,6 @@ media_player:
         - http_media_source
         - sendspin_media_source
     volume_increment: 0.05
-    volume_initial: 1.0
     volume_min: 0.0
     volume_max: 1.0
     on_mute:

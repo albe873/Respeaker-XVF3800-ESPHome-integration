@@ -43,18 +43,16 @@ void AIC3104::setup() {
   ERROR_CHECK(this->write_byte(AIC3104_HPR_ROUTE, 0x08), "Set HPR_ROUTE failed");
   ERROR_CHECK(this->write_byte(AIC3104_LOL_ROUTE, 0x08), "Set LOL_ROUTE failed");
   ERROR_CHECK(this->write_byte(AIC3104_LOR_ROUTE, 0x08), "Set LOR_ROUTE failed");
-  ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x00), "Restore page 0 failed");
-  // Set both analog output paths to the maximum level documented by Seeed.
-  // This covers the board's headphone and JST amplifier routes.
-  ERROR_CHECK(this->write_byte(AIC3104_HPLOUT_LEVEL, 0x0D), "Set HPLOUT level failed");
-  ERROR_CHECK(this->write_byte(AIC3104_HPROUT_LEVEL, 0x0D), "Set HPROUT level failed");
-  ERROR_CHECK(this->write_byte(AIC3104_LEFT_LOP_LEVEL, 0x0B), "Set LEFT_LOP level failed");
-  ERROR_CHECK(this->write_byte(AIC3104_RIGHT_LOP_LEVEL, 0x0B), "Set RIGHT_LOP level failed");
   ERROR_CHECK(this->write_byte(AIC3104_HPL_GAIN, 0x3E), "Set HPL_GAIN failed");
   ERROR_CHECK(this->write_byte(AIC3104_HPR_GAIN, 0x3E), "Set HPR_GAIN failed");
   ERROR_CHECK(this->write_byte(AIC3104_LOL_DRV_GAIN, 0x00), "Set LOL_DRV_GAIN failed");
   ERROR_CHECK(this->write_byte(AIC3104_LOR_DRV_GAIN, 0x00), "Set LOR_DRV_GAIN failed");
   ERROR_CHECK(this->write_byte(AIC3104_OP_PWR_CTRL, 0x3C), "Enable output drivers failed");
+  ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x00), "Restore page 0 failed");
+  ERROR_CHECK(this->write_byte(AIC3104_HPLOUT_LEVEL, 0x0D), "Set HPLOUT level failed");
+  ERROR_CHECK(this->write_byte(AIC3104_HPROUT_LEVEL, 0x0D), "Set HPROUT level failed");
+  ERROR_CHECK(this->write_byte(AIC3104_LEFT_LOP_LEVEL, 0x0B), "Set LEFT_LOP level failed");
+  ERROR_CHECK(this->write_byte(AIC3104_RIGHT_LOP_LEVEL, 0x0B), "Set RIGHT_LOP level failed");
 
   this->set_timeout(2500, [this]() {
     ERROR_CHECK(this->write_byte(AIC3104_DAC_CH_SET1, 0xD4), "Enable DAC channels failed");
@@ -116,20 +114,21 @@ bool AIC3104::write_volume_() {
   // The DAC attenuation uses 0.5 dB steps; the upper half adds output gain.
   const uint8_t level = static_cast<uint8_t>(this->volume_ * 17.0f + 0.5f);
   const uint8_t dac_val = this->is_muted_ ? 0x80 : (level <= 8 ? (8 - level) * 9 : 0);
-  const uint8_t output_level = level <= 8 ? 0x0D : ((level - 8) << 4) | 0x0B;
+  const uint8_t hp_output_level = level <= 8 ? 0x0D : ((level - 8) << 4) | 0x0B;
+  const uint8_t line_output_level = level <= 8 ? 0x0B : ((level - 8) << 4) | 0x0B;
 
   if (!this->write_byte(AIC3104_LEFT_DAC_VOLUME, dac_val) ||
       !this->write_byte(AIC3104_RIGHT_DAC_VOLUME, dac_val) ||
-      !this->write_byte(AIC3104_HPLOUT_LEVEL, output_level) ||
-      !this->write_byte(AIC3104_HPROUT_LEVEL, output_level) ||
-      !this->write_byte(AIC3104_LEFT_LOP_LEVEL, output_level) ||
-      !this->write_byte(AIC3104_RIGHT_LOP_LEVEL, output_level)) {
+      !this->write_byte(AIC3104_HPLOUT_LEVEL, hp_output_level) ||
+      !this->write_byte(AIC3104_HPROUT_LEVEL, hp_output_level) ||
+      !this->write_byte(AIC3104_LEFT_LOP_LEVEL, line_output_level) ||
+      !this->write_byte(AIC3104_RIGHT_LOP_LEVEL, line_output_level)) {
     ESP_LOGE(TAG, "Writing AIC3104 volume failed");
     return false;
   }
 
-  ESP_LOGD(TAG, "Volume %.1f%% -> level %u, DAC 0x%02X, output 0x%02X%s",
-           this->volume_ * 100.0f, level, dac_val, output_level,
+  ESP_LOGD(TAG, "Volume %.1f%% -> level %u, DAC 0x%02X, HP 0x%02X, LOP 0x%02X%s",
+           this->volume_ * 100.0f, level, dac_val, hp_output_level, line_output_level,
            this->is_muted_ ? " (muted)" : "");
   return true;
 }

@@ -18,11 +18,11 @@ substitutions:
   # Change "main" to a tag or a commit to pin the device to one version. Set
   # the same value in "ref:" below, so that the YAML and the C++ agree.
   respeaker_ref: main
-  respeaker_repo: albe873/Respeaker-XVF3800-ESPHome-integration
+  respeaker_repo: https://github.com/albe873/Respeaker-XVF3800-ESPHome-integration
 
 packages:
   respeaker:
-    url: https://github.com/${respeaker_repo}
+    url: ${respeaker_repo}
     ref: ${respeaker_ref}
     # Keep this short while developing package/component changes. Set to 1d
     # again after pinning respeaker_ref to a release or commit.

@@ -123,7 +123,7 @@ respeaker_xvf3800:
     id: beam_direction
     internal: true
   firmware:
-    url: https://github.com/${respeaker_repo}/raw/${respeaker_ref}/application_xvf3800_inthost-lr48-sqr-i2c-v1.0.7-release.bin
+    url: ${respeaker_repo}/raw/${respeaker_ref}/application_xvf3800_inthost-lr48-sqr-i2c-v1.0.7-release.bin
     version: "1.0.7"
     md5: 043a848f544ff2c7265ac19685daf5de
 

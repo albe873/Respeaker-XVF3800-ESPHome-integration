@@ -56,14 +56,15 @@ void AIC3104::setup() {
   ERROR_CHECK(this->write_byte(AIC3104_OP_PWR_CTRL, 0x3C), "Enable output drivers failed");
 
   this->set_timeout(2500, [this]() {
-    ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x00), "Set page 0 failed");
     ERROR_CHECK(this->write_byte(AIC3104_DAC_CH_SET1, 0xD4), "Enable DAC channels failed");
     ERROR_CHECK(this->write_volume_(), "Set volume failed");
     ERROR_CHECK(this->write_mute_(), "Set mute failed");
+    ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x01), "Set page 1 failed");
     auto hp_left = this->read_byte(AIC3104_HPLOUT_LEVEL);
     auto hp_right = this->read_byte(AIC3104_HPROUT_LEVEL);
     auto line_left = this->read_byte(AIC3104_LEFT_LOP_LEVEL);
     auto line_right = this->read_byte(AIC3104_RIGHT_LOP_LEVEL);
+    ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x00), "Restore page 0 failed");
     ESP_LOGI(TAG, "AIC3104 output levels: HP=0x%02X/0x%02X LOP=0x%02X/0x%02X",
              hp_left.value_or(0xFF), hp_right.value_or(0xFF), line_left.value_or(0xFF),
              line_right.value_or(0xFF));

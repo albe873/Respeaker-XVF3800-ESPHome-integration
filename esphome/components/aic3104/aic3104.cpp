@@ -43,6 +43,7 @@ void AIC3104::setup() {
   ERROR_CHECK(this->write_byte(AIC3104_HPR_ROUTE, 0x08), "Set HPR_ROUTE failed");
   ERROR_CHECK(this->write_byte(AIC3104_LOL_ROUTE, 0x08), "Set LOL_ROUTE failed");
   ERROR_CHECK(this->write_byte(AIC3104_LOR_ROUTE, 0x08), "Set LOR_ROUTE failed");
+  ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x00), "Restore page 0 failed");
   // Set both analog output paths to the maximum level documented by Seeed.
   // This covers the board's headphone and JST amplifier routes.
   ERROR_CHECK(this->write_byte(AIC3104_HPLOUT_LEVEL, 0x0D), "Set HPLOUT level failed");
@@ -59,12 +60,11 @@ void AIC3104::setup() {
     ERROR_CHECK(this->write_byte(AIC3104_DAC_CH_SET1, 0xD4), "Enable DAC channels failed");
     ERROR_CHECK(this->write_volume_(), "Set volume failed");
     ERROR_CHECK(this->write_mute_(), "Set mute failed");
-    ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x01), "Set page 1 failed");
+    ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x00), "Set page 0 failed");
     auto hp_left = this->read_byte(AIC3104_HPLOUT_LEVEL);
     auto hp_right = this->read_byte(AIC3104_HPROUT_LEVEL);
     auto line_left = this->read_byte(AIC3104_LEFT_LOP_LEVEL);
     auto line_right = this->read_byte(AIC3104_RIGHT_LOP_LEVEL);
-    ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x00), "Restore page 0 failed");
     ESP_LOGI(TAG, "AIC3104 output levels: HP=0x%02X/0x%02X LOP=0x%02X/0x%02X",
              hp_left.value_or(0xFF), hp_right.value_or(0xFF), line_left.value_or(0xFF),
              line_right.value_or(0xFF));
@@ -82,12 +82,12 @@ void AIC3104::dump_config() {
 
 bool AIC3104::set_mute_off() {
   this->is_muted_ = false;
-  return this->write_mute_();
+  return this->write_volume_();
 }
 
 bool AIC3104::set_mute_on() {
   this->is_muted_ = true;
-  return this->write_mute_();
+  return this->write_volume_();
 }
 
 bool AIC3104::set_volume(float volume) {
@@ -103,45 +103,34 @@ bool AIC3104::is_muted() { return this->is_muted_; }
 float AIC3104::volume() { return this->volume_; }
 
 bool AIC3104::write_mute_() {
-  // XVF3800/AIC3104 mute control - setting volume to maximum attenuation
-  uint8_t mute_value = this->is_muted_ ? 0x80 : ((1.0f - this->volume_) * 0x80);
-  
-  if (!this->write_byte(AIC3104_PAGE_CTRL, 0x00) || 
-      !this->write_byte(AIC3104_LEFT_DAC_VOLUME, mute_value) ||
-      !this->write_byte(AIC3104_RIGHT_DAC_VOLUME, mute_value)) {
-    ESP_LOGE(TAG, "Writing mute failed");
-    return false;
-  }
-  
-  ESP_LOGVV(TAG, "Mute %s (volume=0x%.2x)", this->is_muted_ ? "ON" : "OFF", mute_value);
-  return true;
+  return this->write_volume_();
 }
 
 bool AIC3104::write_volume_() {
-  ESP_LOGD(TAG, "write_volume_() called - volume: %.2f", this->volume_);
-  
   if (!this->write_byte(AIC3104_PAGE_CTRL, 0x00)) {
     ESP_LOGE(TAG, "Failed to set page 0");
     return false;
   }
-  
-  // Map volume 0.0-1.0 to DAC range 0x80-0x00 (inverted)
-  // 0x00 = 0dB (loudest), 0x7F = -63.5dB (quietest), 0x80 = mute
-  uint8_t dac_val = (uint8_t)((1.0f - this->volume_) * 0x80);
-  dac_val = clamp<uint8_t>(dac_val, 0x00, 0x80);
-  
-  ESP_LOGD(TAG, "Writing DAC volume: 0x%.2x (%.1fdB attenuation) to registers 0x2B/0x2C", 
-           dac_val, -(float)dac_val);
-  
+
+  // Match the board's 0-17 volume control: DAC attenuation through 8, then
+  // analog output gain through 17. The AIC3104 DAC volume uses 0.5 dB steps.
+  const uint8_t level = static_cast<uint8_t>(this->volume_ * 17.0f + 0.5f);
+  const uint8_t dac_val = this->is_muted_ ? 0x80 : (level <= 8 ? level * 9 : 0);
+  const uint8_t output_level = level <= 8 ? 0x0D : ((level - 8) << 4) | 0x0B;
+
   if (!this->write_byte(AIC3104_LEFT_DAC_VOLUME, dac_val) ||
-      !this->write_byte(AIC3104_RIGHT_DAC_VOLUME, dac_val)) {
-    ESP_LOGE(TAG, "Writing DAC volume failed");
+      !this->write_byte(AIC3104_RIGHT_DAC_VOLUME, dac_val) ||
+      !this->write_byte(AIC3104_HPLOUT_LEVEL, output_level) ||
+      !this->write_byte(AIC3104_HPROUT_LEVEL, output_level) ||
+      !this->write_byte(AIC3104_LEFT_LOP_LEVEL, output_level) ||
+      !this->write_byte(AIC3104_RIGHT_LOP_LEVEL, output_level)) {
+    ESP_LOGE(TAG, "Writing AIC3104 volume failed");
     return false;
   }
-  
-  ESP_LOGD(TAG, "Volume %.1f%% → DAC: 0x%.2x (%.1fdB attenuation) - SUCCESS", 
-           this->volume_ * 100.0f, dac_val, -(float)dac_val);
-  
+
+  ESP_LOGD(TAG, "Volume %.1f%% -> level %u, DAC 0x%02X, output 0x%02X%s",
+           this->volume_ * 100.0f, level, dac_val, output_level,
+           this->is_muted_ ? " (muted)" : "");
   return true;
 }
 

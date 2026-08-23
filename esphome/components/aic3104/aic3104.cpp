@@ -112,10 +112,10 @@ bool AIC3104::write_volume_() {
     return false;
   }
 
-  // Match the board's 0-17 volume control: DAC attenuation through 8, then
-  // analog output gain through 17. The AIC3104 DAC volume uses 0.5 dB steps.
+  // Map ESPHome's quiet-to-loud volume direction onto the board's 0-17 range.
+  // The DAC attenuation uses 0.5 dB steps; the upper half adds output gain.
   const uint8_t level = static_cast<uint8_t>(this->volume_ * 17.0f + 0.5f);
-  const uint8_t dac_val = this->is_muted_ ? 0x80 : (level <= 8 ? level * 9 : 0);
+  const uint8_t dac_val = this->is_muted_ ? 0x80 : (level <= 8 ? (8 - level) * 9 : 0);
   const uint8_t output_level = level <= 8 ? 0x0D : ((level - 8) << 4) | 0x0B;
 
   if (!this->write_byte(AIC3104_LEFT_DAC_VOLUME, dac_val) ||

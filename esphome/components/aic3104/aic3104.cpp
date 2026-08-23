@@ -54,6 +54,7 @@ void AIC3104::setup() {
     ERROR_CHECK(this->write_byte(AIC3104_DAC_CH_SET1, 0xD4), "Enable DAC channels failed");
     ERROR_CHECK(this->write_volume_(), "Set volume failed");
     ERROR_CHECK(this->write_mute_(), "Set mute failed");
+    ESP_LOGI(TAG, "AIC3104 DAC and analog output initialized");
   });
 }
 

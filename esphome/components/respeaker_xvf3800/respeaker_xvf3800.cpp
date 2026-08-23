@@ -37,8 +37,13 @@ void RespeakerXVF3800::setup() {
       this->start_dfu_update();
     }
 
-    if (this->versions_match_() && !this->enable_integrated_amplifier_()) {
-      ESP_LOGW(TAG, "Failed to enable integrated speaker amplifier");
+    if (this->versions_match_()) {
+      if (!this->enable_integrated_amplifier_()) {
+        ESP_LOGW(TAG, "Failed to enable integrated speaker amplifier");
+      }
+      if (!this->configure_lineout_level_()) {
+        ESP_LOGW(TAG, "Failed to configure AIC3104 line-out level");
+      }
     }
   });
 }
@@ -77,6 +82,9 @@ void RespeakerXVF3800::loop() {
       // Mute state is handled by the MuteSwitch component using GPO methods
       if (!this->enable_integrated_amplifier_()) {
         ESP_LOGW(TAG, "Failed to enable integrated speaker amplifier");
+      }
+      if (!this->configure_lineout_level_()) {
+        ESP_LOGW(TAG, "Failed to configure AIC3104 line-out level");
       }
       break;
   }
@@ -402,7 +410,20 @@ bool RespeakerXVF3800::enable_integrated_amplifier_() {
   }
 
   this->integrated_amplifier_enabled_ = true;
-  ESP_LOGD(TAG, "Integrated speaker amplifier enabled");
+  ESP_LOGI(TAG, "Integrated speaker amplifier enabled (X0D31=LOW)");
+  return true;
+}
+
+bool RespeakerXVF3800::configure_lineout_level_() {
+  if (this->lineout_level_configured_) {
+    return true;
+  }
+
+  // This gain is separate from the media-player volume and controls the line output.
+  const uint8_t level = 9;
+  this->xmos_write_bytes(APPLICATION_SERVICER_RESID, AIC3104_LINEOUT_LEVEL_CMD, &level, 1);
+  this->lineout_level_configured_ = true;
+  ESP_LOGI(TAG, "AIC3104 line-out level set to %u/9", level);
   return true;
 }
 

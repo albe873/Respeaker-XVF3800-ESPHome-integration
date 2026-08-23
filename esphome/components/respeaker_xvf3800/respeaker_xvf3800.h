@@ -38,6 +38,8 @@ const uint8_t GPO_SERVICER_RESID_GPO_READ_VALUES = 0;
 const uint8_t GPO_SERVICER_RESID_GPO_WRITE_VALUE = 1;
 const uint8_t GPO_SERVICER_RESID_LED_RING_VALUE = 18;
 const uint8_t GPO_GPO_READ_NUM_BYTES = 5;
+const uint8_t APPLICATION_SERVICER_RESID = 48;
+const uint8_t AIC3104_LINEOUT_LEVEL_CMD = 12;
 
 // AEC Azimuth constants for LED beam sensor
 const uint8_t AEC_SERVICER_RESID = 33;
@@ -264,9 +266,11 @@ class RespeakerXVF3800 : public i2c::I2CDevice, public Component {
   bool dfu_set_alternate_();
   bool dfu_check_if_ready_();
   bool enable_integrated_amplifier_();
+  bool configure_lineout_level_();
 
   GPIOPin *reset_pin_{nullptr};
   bool integrated_amplifier_enabled_{false};
+  bool lineout_level_configured_{false};
   #ifdef USE_BINARY_SENSOR
   binary_sensor::BinarySensor *mute_state_{nullptr};
   #endif

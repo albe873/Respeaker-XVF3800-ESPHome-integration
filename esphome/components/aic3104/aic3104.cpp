@@ -45,10 +45,10 @@ void AIC3104::setup() {
   ERROR_CHECK(this->write_byte(AIC3104_LOR_ROUTE, 0x08), "Set LOR_ROUTE failed");
   // Set both analog output paths to the maximum level documented by Seeed.
   // This covers the board's headphone and JST amplifier routes.
-  ERROR_CHECK(this->write_byte(AIC3104_HPLOUT_LEVEL, 0x9B), "Set HPLOUT level failed");
-  ERROR_CHECK(this->write_byte(AIC3104_HPROUT_LEVEL, 0x9B), "Set HPROUT level failed");
-  ERROR_CHECK(this->write_byte(AIC3104_LEFT_LOP_LEVEL, 0x9B), "Set LEFT_LOP level failed");
-  ERROR_CHECK(this->write_byte(AIC3104_RIGHT_LOP_LEVEL, 0x9B), "Set RIGHT_LOP level failed");
+  ERROR_CHECK(this->write_byte(AIC3104_HPLOUT_LEVEL, 0x0D), "Set HPLOUT level failed");
+  ERROR_CHECK(this->write_byte(AIC3104_HPROUT_LEVEL, 0x0D), "Set HPROUT level failed");
+  ERROR_CHECK(this->write_byte(AIC3104_LEFT_LOP_LEVEL, 0x0B), "Set LEFT_LOP level failed");
+  ERROR_CHECK(this->write_byte(AIC3104_RIGHT_LOP_LEVEL, 0x0B), "Set RIGHT_LOP level failed");
   ERROR_CHECK(this->write_byte(AIC3104_HPL_GAIN, 0x3E), "Set HPL_GAIN failed");
   ERROR_CHECK(this->write_byte(AIC3104_HPR_GAIN, 0x3E), "Set HPR_GAIN failed");
   ERROR_CHECK(this->write_byte(AIC3104_LOL_DRV_GAIN, 0x00), "Set LOL_DRV_GAIN failed");

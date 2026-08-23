@@ -17,6 +17,7 @@ substitutions:
   # Ref of this repository. It selects the C++ components and the DFU firmware.
   # Set it to the same tag or commit that you use for the packages themselves.
   respeaker_ref: main
+  respeaker_repo: formatBCE/Respeaker-XVF3800-ESPHome-integration
   # Ref of the patched i2s_audio fork. The stock component does not work.
   i2s_audio_ref: respeaker_microphone
 
@@ -198,7 +199,7 @@ external_components:
     refresh: 0s
   - source:
       type: git
-      url: https://github.com/formatBCE/Respeaker-XVF3800-ESPHome-integration
+      url: https://github.com/${respeaker_repo}
       ref: ${respeaker_ref}
     components:
       - respeaker_xvf3800

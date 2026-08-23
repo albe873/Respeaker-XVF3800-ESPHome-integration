@@ -263,8 +263,10 @@ class RespeakerXVF3800 : public i2c::I2CDevice, public Component {
   bool dfu_reboot_();
   bool dfu_set_alternate_();
   bool dfu_check_if_ready_();
+  bool enable_integrated_amplifier_();
 
   GPIOPin *reset_pin_{nullptr};
+  bool integrated_amplifier_enabled_{false};
   #ifdef USE_BINARY_SENSOR
   binary_sensor::BinarySensor *mute_state_{nullptr};
   #endif

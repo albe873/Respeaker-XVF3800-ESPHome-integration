@@ -17,7 +17,44 @@ static const char *const TAG = "aic3104";
   }
 
 void AIC3104::setup() {
-  // do nothing
+  ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x00), "Set page 0 failed");
+  ERROR_CHECK(this->write_byte(AIC3104_SW_RST, 0x01), "Software reset failed");
+
+  // The XVF3800 I2S clock is 48 kHz with a 32-bit stereo frame.
+  ERROR_CHECK(this->write_byte(AIC3104_NDAC, 0x82), "Set NDAC failed");
+  ERROR_CHECK(this->write_byte(AIC3104_MDAC, 0x82), "Set MDAC failed");
+  ERROR_CHECK(this->write_byte(AIC3104_DOSR, 0x80), "Set DOSR failed");
+  ERROR_CHECK(this->write_byte(AIC3104_CODEC_IF, 0x30), "Set CODEC_IF failed");
+  ERROR_CHECK(this->write_byte(AIC3104_SCLK_MFP3, 0x02), "Set SCLK/MFP3 failed");
+  ERROR_CHECK(this->write_byte(AIC3104_AUDIO_IF_4, 0x01), "Set AUDIO_IF_4 failed");
+  ERROR_CHECK(this->write_byte(AIC3104_AUDIO_IF_5, 0x01), "Set AUDIO_IF_5 failed");
+
+  // Route and power the line outputs used by the board's integrated amplifier.
+  ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x01), "Set page 1 failed");
+  ERROR_CHECK(this->write_byte(AIC3104_LDO_CTRL, 0x09), "Set LDO_CTRL failed");
+  ERROR_CHECK(this->write_byte(AIC3104_PWR_CFG, 0x08), "Set PWR_CFG failed");
+  ERROR_CHECK(this->write_byte(AIC3104_LDO_CTRL, 0x01), "Enable analog power failed");
+  ERROR_CHECK(this->write_byte(AIC3104_CM_CTRL, 0x40), "Set CM_CTRL failed");
+  ERROR_CHECK(this->write_byte(AIC3104_PLAY_CFG1, 0x00), "Set PLAY_CFG1 failed");
+  ERROR_CHECK(this->write_byte(AIC3104_PLAY_CFG2, 0x00), "Set PLAY_CFG2 failed");
+  ERROR_CHECK(this->write_byte(AIC3104_REF_STARTUP, 0x01), "Set REF_STARTUP failed");
+  ERROR_CHECK(this->write_byte(AIC3104_HP_START, 0x25), "Set HP_START failed");
+  ERROR_CHECK(this->write_byte(AIC3104_HPL_ROUTE, 0x08), "Set HPL_ROUTE failed");
+  ERROR_CHECK(this->write_byte(AIC3104_HPR_ROUTE, 0x08), "Set HPR_ROUTE failed");
+  ERROR_CHECK(this->write_byte(AIC3104_LOL_ROUTE, 0x08), "Set LOL_ROUTE failed");
+  ERROR_CHECK(this->write_byte(AIC3104_LOR_ROUTE, 0x08), "Set LOR_ROUTE failed");
+  ERROR_CHECK(this->write_byte(AIC3104_HPL_GAIN, 0x3E), "Set HPL_GAIN failed");
+  ERROR_CHECK(this->write_byte(AIC3104_HPR_GAIN, 0x3E), "Set HPR_GAIN failed");
+  ERROR_CHECK(this->write_byte(AIC3104_LOL_DRV_GAIN, 0x00), "Set LOL_DRV_GAIN failed");
+  ERROR_CHECK(this->write_byte(AIC3104_LOR_DRV_GAIN, 0x00), "Set LOR_DRV_GAIN failed");
+  ERROR_CHECK(this->write_byte(AIC3104_OP_PWR_CTRL, 0x3C), "Enable output drivers failed");
+
+  this->set_timeout(2500, [this]() {
+    ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x00), "Set page 0 failed");
+    ERROR_CHECK(this->write_byte(AIC3104_DAC_CH_SET1, 0xD4), "Enable DAC channels failed");
+    ERROR_CHECK(this->write_volume_(), "Set volume failed");
+    ERROR_CHECK(this->write_mute_(), "Set mute failed");
+  });
 }
 
 void AIC3104::dump_config() {

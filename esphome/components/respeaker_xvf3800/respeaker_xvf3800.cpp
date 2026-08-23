@@ -36,6 +36,10 @@ void RespeakerXVF3800::setup() {
                this->firmware_version_minor_, this->firmware_version_patch_);
       this->start_dfu_update();
     }
+
+    if (this->versions_match_() && !this->enable_integrated_amplifier_()) {
+      ESP_LOGW(TAG, "Failed to enable integrated speaker amplifier");
+    }
   });
 }
 
@@ -71,6 +75,9 @@ void RespeakerXVF3800::loop() {
     default:
       // Normal operation - no additional logic needed here
       // Mute state is handled by the MuteSwitch component using GPO methods
+      if (!this->enable_integrated_amplifier_()) {
+        ESP_LOGW(TAG, "Failed to enable integrated speaker amplifier");
+      }
       break;
   }
 }
@@ -380,6 +387,23 @@ void RespeakerXVF3800::write_mute_status(bool value) {
   if (err != i2c::ERROR_OK) {
     ESP_LOGW(TAG, "Error writing mute status to GPIO 30. Error code: %d", (int)err);
   }
+}
+
+bool RespeakerXVF3800::enable_integrated_amplifier_() {
+  if (this->integrated_amplifier_enabled_) {
+    return true;
+  }
+
+  // X0D31 is the active-low enable for the board's integrated speaker amp.
+  uint8_t amplifier_enable[] = {GPO_SERVICER_RESID, GPO_SERVICER_RESID_GPO_WRITE_VALUE,
+                                2, 31, 0};
+  if (this->write(amplifier_enable, sizeof(amplifier_enable)) != i2c::ERROR_OK) {
+    return false;
+  }
+
+  this->integrated_amplifier_enabled_ = true;
+  ESP_LOGD(TAG, "Integrated speaker amplifier enabled");
+  return true;
 }
 
 bool RespeakerXVF3800::read_azimuth_radians_(float &out_radians, uint8_t beam_index) {

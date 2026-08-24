@@ -29,32 +29,17 @@ void AIC3104::setup() {
   ERROR_CHECK(this->write_byte(AIC3104_AUDIO_IF_4, 0x01), "Set AUDIO_IF_4 failed");
   ERROR_CHECK(this->write_byte(AIC3104_AUDIO_IF_5, 0x01), "Set AUDIO_IF_5 failed");
 
-  // Route and power the line outputs used by the board's integrated amplifier.
-  ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x01), "Set page 1 failed");
-  ERROR_CHECK(this->write_byte(AIC3104_LDO_CTRL, 0x09), "Set LDO_CTRL failed");
-  ERROR_CHECK(this->write_byte(AIC3104_PWR_CFG, 0x08), "Set PWR_CFG failed");
-  ERROR_CHECK(this->write_byte(AIC3104_LDO_CTRL, 0x01), "Enable analog power failed");
-  ERROR_CHECK(this->write_byte(AIC3104_CM_CTRL, 0x40), "Set CM_CTRL failed");
-  ERROR_CHECK(this->write_byte(AIC3104_PLAY_CFG1, 0x00), "Set PLAY_CFG1 failed");
-  ERROR_CHECK(this->write_byte(AIC3104_PLAY_CFG2, 0x00), "Set PLAY_CFG2 failed");
-  ERROR_CHECK(this->write_byte(AIC3104_REF_STARTUP, 0x01), "Set REF_STARTUP failed");
-  ERROR_CHECK(this->write_byte(AIC3104_HP_START, 0x25), "Set HP_START failed");
-  ERROR_CHECK(this->write_byte(AIC3104_HPL_ROUTE, 0x08), "Set HPL_ROUTE failed");
-  ERROR_CHECK(this->write_byte(AIC3104_HPR_ROUTE, 0x08), "Set HPR_ROUTE failed");
-  ERROR_CHECK(this->write_byte(AIC3104_LOL_ROUTE, 0x08), "Set LOL_ROUTE failed");
-  ERROR_CHECK(this->write_byte(AIC3104_LOR_ROUTE, 0x08), "Set LOR_ROUTE failed");
-  ERROR_CHECK(this->write_byte(AIC3104_PAGE_CTRL, 0x00), "Restore page 0 failed");
+  ERROR_CHECK(this->write_byte(AIC3104_DAC_L1_HPLOUT_VOLUME, 0x80), "Route left DAC to HPLOUT failed");
+  ERROR_CHECK(this->write_byte(AIC3104_DAC_R1_HPROUT_VOLUME, 0x80), "Route right DAC to HPROUT failed");
+  ERROR_CHECK(this->write_byte(AIC3104_DAC_L1_LEFT_LOP_VOLUME, 0x80), "Route left DAC to LEFT_LOP failed");
+  ERROR_CHECK(this->write_byte(AIC3104_DAC_R1_RIGHT_LOP_VOLUME, 0x80), "Route right DAC to RIGHT_LOP failed");
+
   // Set both analog output paths to the maximum level documented by Seeed.
   // This covers the board's headphone and JST amplifier routes.
   ERROR_CHECK(this->write_byte(AIC3104_HPLOUT_LEVEL, 0x0D), "Set HPLOUT level failed");
   ERROR_CHECK(this->write_byte(AIC3104_HPROUT_LEVEL, 0x0D), "Set HPROUT level failed");
   ERROR_CHECK(this->write_byte(AIC3104_LEFT_LOP_LEVEL, 0x0B), "Set LEFT_LOP level failed");
   ERROR_CHECK(this->write_byte(AIC3104_RIGHT_LOP_LEVEL, 0x0B), "Set RIGHT_LOP level failed");
-  ERROR_CHECK(this->write_byte(AIC3104_HPL_GAIN, 0x3E), "Set HPL_GAIN failed");
-  ERROR_CHECK(this->write_byte(AIC3104_HPR_GAIN, 0x3E), "Set HPR_GAIN failed");
-  ERROR_CHECK(this->write_byte(AIC3104_LOL_DRV_GAIN, 0x00), "Set LOL_DRV_GAIN failed");
-  ERROR_CHECK(this->write_byte(AIC3104_LOR_DRV_GAIN, 0x00), "Set LOR_DRV_GAIN failed");
-  ERROR_CHECK(this->write_byte(AIC3104_OP_PWR_CTRL, 0x3C), "Enable output drivers failed");
 
   this->set_timeout(2500, [this]() {
     ERROR_CHECK(this->write_byte(AIC3104_DAC_CH_SET1, 0xD4), "Enable DAC channels failed");

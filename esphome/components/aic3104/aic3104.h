@@ -107,24 +107,6 @@ namespace aic3104 {
 #define AIC3104_SCLK_MFP3               0x38
 #define AIC3104_DAC_CH_SET1             0x3F
 
-// Page 1 analog output routing and power registers.
-#define AIC3104_PWR_CFG                 0x01
-#define AIC3104_LDO_CTRL                0x02
-#define AIC3104_PLAY_CFG1               0x03
-#define AIC3104_PLAY_CFG2               0x04
-#define AIC3104_OP_PWR_CTRL             0x09
-#define AIC3104_CM_CTRL                 0x0A
-#define AIC3104_HPL_ROUTE               0x0C
-#define AIC3104_HPR_ROUTE               0x0D
-#define AIC3104_LOL_ROUTE               0x0E
-#define AIC3104_LOR_ROUTE               0x0F
-#define AIC3104_HPL_GAIN                0x10
-#define AIC3104_HPR_GAIN                0x11
-#define AIC3104_LOL_DRV_GAIN            0x12
-#define AIC3104_LOR_DRV_GAIN            0x13
-#define AIC3104_REF_STARTUP             0x7B
-#define AIC3104_HP_START                0x14
-
 class AIC3104 : public audio_dac::AudioDac, public Component, public i2c::I2CDevice {
  public:
   void setup() override;

@@ -171,7 +171,7 @@ micro_wake_word:
     microphone: i2s_mics
     channels: 1
     # gain_factor: 4
-  stop_after_detection: true
+  stop_after_detection: false
   models:
     - model: https://github.com/OHF-Voice/micro-wake-word/releases/download/okay_nabu_20241226.3/okay_nabu.json
       # probability_cutoff: 0.8
@@ -188,6 +188,7 @@ micro_wake_word:
   vad:
     probability_cutoff: 0.05
   on_wake_word_detected:
+    - micro_wake_word.disable_model: stop
     # If the wake word is detected when the device is muted (Possible with the software mute switch): Do nothing
     - if:
         condition:
@@ -299,6 +300,7 @@ voice_assistant:
     - script.execute: control_leds
   on_stt_vad_start:
     - lambda: id(voice_assistant_phase) = ${voice_assist_listening_for_command_phase_id};
+    - micro_wake_word.disable_model: stop
     - script.execute: control_leds
   on_stt_vad_end:
     - lambda: id(voice_assistant_phase) = ${voice_assist_thinking_phase_id};
@@ -340,12 +342,7 @@ voice_assistant:
     # Safety-net unlock: covers paths where on_stt_vad_end never fired
     # (pipeline error mid-capture, abort, etc.). Idempotent.
     - lambda: id(respeaker).unlock_beam();
-    - micro_wake_word.start:
-    - if:
-        condition:
-          switch.is_off: timer_ringing
-        then:
-          - micro_wake_word.enable_model: stop
+    - micro_wake_word.disable_model: stop
     - wait_until:
         not:
           voice_assistant.is_running:

@@ -308,6 +308,7 @@ voice_assistant:
     # detector can still hear the user from anywhere in the room during TTS.
     - lambda: id(respeaker).unlock_beam();
     - script.execute: control_leds
+    - script.execute: recover_stuck_voice_assistant
   on_intent_progress:
     - if:
         condition:
@@ -457,6 +458,19 @@ script:
                   switch.is_off: timer_ringing
                 then:
                   - micro_wake_word.disable_model: stop
+
+  # Recover a pipeline that never returns from STT or intent processing.
+  - id: recover_stuck_voice_assistant
+    mode: restart
+    then:
+      - delay: 15s
+      - if:
+          condition:
+            and:
+              - voice_assistant.is_running:
+              - lambda: return id(voice_assistant_phase) == ${voice_assist_thinking_phase_id};
+          then:
+            - voice_assistant.stop
 
 
   - id: send_wake_word_event
